@@ -33,8 +33,8 @@ echo "done with unstranded files"
 ## featureCounts stuff
 echo "now do featureCounts stuff for stranded and unstranded in THAT order"
 
-for f1 in $FILE1; do featureCounts $bam_dir1/$f1 -a $ANNOT -F -f -t -O -s 1 -M -T 11 -p -o ${f1%".bam"}".txt" $bam_dir1/f1; done
+for f1 in $FILE1; do featureCounts $bam_dir1/$f1 -a $ANNOT -F -f -t -O -s 1 -M -T 11 -p -o ${f1%".bam"}".txt" $bam_dir1/$f1; done
 echo "done with stranded file. NOW do unstranded files"
-for f2 in $FILE2; do featureCounts $bam_dir2/$f2 -a $ANNOT -F -f -t -O -s 0 -M -T 11 -p -o ${f2%".bam"}".txt" $bam_dir2/f2; done
+for f2 in $FILE2; do featureCounts $bam_dir2/$f2 -a $ANNOT -F -f -t -O -s 0 -M -T 11 -p -o ${f2%".bam"}".txt" $bam_dir2/$f2; done
 
 
