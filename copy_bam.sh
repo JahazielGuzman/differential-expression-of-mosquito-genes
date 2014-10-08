@@ -32,6 +32,6 @@ for f2 in $FILE2; do samtools sort -@ 11 -n $bam_dir2/$f2 "sorted."${f2%".bam"};
 
 #featureCounts read summarization
 
-for f1 in $FILE1; do featureCounts $bam_dir1/$f1 -a $ANNOT -F -g 'exon' -f -t 'exon' -O -s 1 -M -T 12 -p -o ${f1%".bam"}".txt"; done
+for f1 in $FILE1; do featureCounts $bam_dir1/$f1 -a $ANNOT -F -g -f -t 'exon' -O -s 1 -M -T 12 -p -o ${f1%".bam"}".txt"; done
 
-for f2 in $FILE2; do featureCounts $bam_dir2/$f2 -a $ANNOT -F -g 'exon' -f -t 'exon' -O -s 0 -M -T 12 -p -o ${f2%".bam"}".txt"; done
+for f2 in $FILE2; do featureCounts $bam_dir2/$f2 -a $ANNOT -F -g -f -t 'exon' -O -s 0 -M -T 12 -p -o ${f2%".bam"}".txt"; done
