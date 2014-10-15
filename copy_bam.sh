@@ -16,6 +16,8 @@ bam_dir1="/media/jaxi/differential_expression/stranded"
 bam_dir2="/media/jaxi/differential_expression/unstranded"
 ANNOT="/media/jaxi/differential_expression/noriboaegypti.gff3"
 
+# change the annotation from "ID" to "gene_id"
+# for better compatibility with featureCounts
 sed -ri "s/ID=/gene_id=/g" $ANNOT 
 
 # get the name of each file on a seperate line for stranded and unstranded
