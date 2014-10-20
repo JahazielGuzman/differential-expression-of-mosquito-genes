@@ -1,0 +1,82 @@
+library(dplyr)
+library(DESeq)
+
+### these two commands will read in the count table and 
+### then read in the metadata for the count table respectively
+aegypti_table <- read.table("exon_counts.txt", row.names = 1, header = TRUE)
+aegypti_filter <- read.table("aegypti_metadata.txt")
+
+# create logical vector to use only metadata for 24 hour and 48 hour
+test_hours <- aegypti_filter$hour == 24 | aegypti_filter$hour == 48
+test_hours <- test_hours * (aegypti_filter$bodyPart == "midgut")
+test_hours <- aegypti_filter$hour[test_hours]
+
+# only use replicate samples from 24 hour and 48 hour midgut
+# experimental conditions
+aegypti_24x48 <- aegypti_table[,test_hours]
+
+# now start differential expression
+aegypti_cds <- newCountDataSet(aegypti_24x48, test_hours)
+aegypti_cds <- estimateSizeFactors(aegypti_cds)
+sizeFactors(aegypti_cds)
+aegypti_cds <- estimateDispersions(aegypti_cds, fitType = "local")
+
+aegypit_res <- nbinomTest(aegypti_cds, "24", "48")
+
+# y axis is dispersion for each gene, genes are on the x axis, sorted
+# by their average expression
+plotDispEsts(aegypit_res, main = "avg gene expression in 24 hour and 48 hour midgut samples")
+plotMA(aegypit_res, main = "log2 fold change from 24 hours to 48 hours")
+
+hist(aegypit_res$pval, breaks = 100, col="skyblue", border="slateblue", main="p-values for conditions 24 vs 48")
+
+head(arrange(aegypit_res, foldChange, pval))
+
+###### randomly select genes to display in a heat-map#############
+significant_genes <- sample(row.names(aegypit_cds), 30, replace=TRUE)
+aegypit_resSig <- aegypit_res[significant_genes,]
+
+hmcol = colorRampPalette(brewer.pal(9,"GnBu"))(100)
+heatmap.2(counts(aegypit_res), col=hmcol, trace="none", margin=c(10,6))
+
+######################################################################
+# now compare the 48 hour midgut samples to the 72 hour midgut samples
+######################################################################
+test_hours <- aegypti_filter$hour == 48 | aegypti_filter$hour == 72
+test_hours <- test_hours * (aegypti_filter$bodyPart == "midgut")
+test_hours <- aegypti_filter$hour[test_hours]
+
+aegypti_24x48 <- aegypti_table[,test_hours]
+
+aegypti_cds <- newCountDataSet(aegypti_24x48, test_hours)
+
+aegypti_cds <- estimateSizeFactors(aegypti_cds)
+sizeFactors(aegypti_cds)
+aegypti_cds <- estimateDispersions(aegypti_cds, fitType = "local")
+aegypit_res <- nbinomTest(aegypti_cds, "48", "72")
+
+plotDispEsts(aegypit_res, main = "avg gene expression in 48 hour and 72 hour midgut samples")
+plotMA(aegypit_res, main = "log2 fold change from 48 hours to 72 hours")
+
+hist(aegypit_res$pval, breaks = 100, col="skyblue", border="slateblue", main="p-values for conditions 48 vs 72")
+
+########### now for a very drastic comparision, compare the gene expression 
+########### in the 24 hour samples against that in the 72 hour samples
+
+test_hours <- aegypti_filter$hour == 24 | aegypti_filter$hour == 72
+test_hours <- test_hours * (aegypti_filter$bodyPart == "midgut")
+test_hours <- aegypti_filter$hour[test_hours]
+
+aegypti_24x48 <- aegypti_table[,test_hours]
+
+aegypti_cds <- newCountDataSet(aegypti_24x48, test_hours)
+
+aegypti_cds <- estimateSizeFactors(aegypti_cds)
+sizeFactors(aegypti_cds)
+aegypti_cds <- estimateDispersions(aegypti_cds, fitType = "local")
+aegypit_res <- nbinomTest(aegypti_cds, "24", "72")
+
+plotDispEsts(aegypit_res, main = "avg gene expression in 24 hour and 72 hour midgut samples")
+plotMA(aegypit_res, main = "log2 fold change from 24 hours to 72 hours")
+
+hist(aegypit_res$pval, breaks = 100, col="skyblue", border="slateblue", main="p-values for conditions 24 vs 72")
