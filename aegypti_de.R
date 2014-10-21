@@ -34,5 +34,13 @@ aegypti_resSig <- aegypti_cds[significant_genes,]
 
 hmcol = colorRampPalette(brewer.pal(9,"OrRd"))(100)
 heatmap.2(counts(aegypti_resSig, normalized=TRUE), col=hmcol, trace="none", margin=c(10,6))
-heatmap.2(counts(aegypti_cds[order(aegypti_res$pval),], normalized=TRUE), col=hmcol, trace="none", margin=c(10,6))
-heatmap.2(counts(aegypti_resSig, normalized=TRUE), col=hmcol, trace="none", margin=c(10,6))
+
+significant_genes <- arrange(aegypti_res, pval)[1:30]
+aegypti_resSig <- aegypti_cds[significant_genes,]
+
+heatmap.2(counts(aegypti_cds[aegypti_resSig, normalized=TRUE), col=hmcol, trace="none", margin=c(10,6))
+
+significant_genes <- arrange(aegypti_res, log2FoldChange)[1:30]
+aegypti_resSig <- aegypti_cds[significant_genes,]
+
+heatmap.2(counts(aegypti_, normalized=TRUE), col=hmcol, trace="none", margin=c(10,6))
