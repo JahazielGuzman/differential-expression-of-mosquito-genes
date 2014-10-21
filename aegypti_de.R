@@ -10,7 +10,7 @@ aegypti_filter <- read.table("aegypti_metadata.txt")
 test_hours <- aegypti_filter$time == 24 | aegypti_filter$time == 48
 test_hours <- as.logical(test_hours * (aegypti_filter$bodyPart == "midgut" & aegypti_filter$treated == "no"))
 test_conditions <- aegypti_filter$time[test_hours]
-print ("step 1")
+
 # only use replicate samples from 24 hour and 48 hour midgut
 # experimental conditions
 aegypti_24x48 <- aegypti_table[,test_hours]
@@ -20,7 +20,6 @@ aegypti_cds <- estimateSizeFactors(aegypti_cds)
 sizeFactors(aegypti_cds)
 aegypti_cds <- estimateDispersions(aegypti_cds, fitType="local")
 
-print ("step 2")
 aegypti_res <- nbinomTest(aegypti_cds, "24", "48")
 # y axis is dispersion for each gene, genes are on the x axis, sorted
 # by their average expression
@@ -29,13 +28,11 @@ plotMA(aegypti_cds, main = "log2 fold change from 24 hours to 48 hours")
 hist(aegypti_res$pval, breaks = 100, col="skyblue", border="slateblue", main="p-values for conditions 24 vs 48")
 head(arrange(aegypti_res, foldChange, pval))
 ###### randomly select genes to display in a heat-map#############
-print ("step 3")
+
 significant_genes <- sample(row.names(aegypti_cds), 30, replace=TRUE)
 aegypti_resSig <- aegypti_cds[significant_genes,]
-print("step 4")
+
 hmcol = colorRampPalette(brewer.pal(9,"OrRd"))(100)
 heatmap.2(counts(aegypti_resSig, normalized=TRUE), col=hmcol, trace="none", margin=c(10,6))
 heatmap.2(counts(aegypti_cds[order(aegypti_res$pval),], normalized=TRUE), col=hmcol, trace="none", margin=c(10,6))
 heatmap.2(counts(aegypti_resSig, normalized=TRUE), col=hmcol, trace="none", margin=c(10,6))
-
-
