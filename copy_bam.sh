@@ -16,8 +16,6 @@ bam_dir1="/media/jaxi/differential_expression/stranded"
 bam_dir2="/media/jaxi/differential_expression/unstranded"
 ANNOT="/media/jaxi/differential_expression/noriboaegypti.gff3"
 
-# change the annotation from "ID" to "gene_id"
-# for better compatibility with featureCounts
 sed -ri "s/ID=/gene_id=/g" $ANNOT 
 
 # get the name of each file on a seperate line for stranded and unstranded
@@ -54,9 +52,48 @@ FILE2=$(ls $bam_dir2 | egrep "accepted")
 
 #featureCounts read summarization
 
-for f1 in $FILE1; do featureCounts $bam_dir1/"sorted."$f1 -a $ANNOT -F -g -f -t 'exon' -O -s 1 -M -T 12 -p -o "sorted."${f1%".bam"}".txt"; done
+for f1 in $FILE1; do featureCounts $bam_dir1/$f1 -a $ANNOT -F -g -f -t 'exon' -O -s 1 -M -T 12 -p -o ${f1%".bam"}".txt"; done
 
-for f2 in $FILE2; do featureCounts $bam_dir2/"sorted."$f2 -a $ANNOT -F -g -f -t 'exon' -O -s 0 -M -T 12 -p -o "sorted."${f2%".bam"}".txt"; done
+for f2 in $FILE2; do featureCounts $bam_dir2/$f2 -a $ANNOT -F -g -f -t 'exon' -O -s 0 -M -T 12 -p -o ${f2%".bam"}".txt"; done
 
 mv accepted*0* stranded/diff_expf/
 mv accepted* unstranded/diff_expf/
+
+###### create a subset of the annotated genome, to do read summarization only for hypothetical proteins ############
+###### the hypothetical proteins are labeled as mRNA;s #############################################################
+
+egrep ".*(mRNA).*hypothetical" noriboaegypti.gff3 > hypothetical_aegypti.gff3
+
+ANNOT="/media/jaxi/differential_expression/hypothetical_aegypti.gff3"
+
+################# do read summarization considering only these sequences ############################
+
+FILE1=$(ls $bam_dir1 | egrep "^accepted_hits0[1-5]\.")
+FILE2=$(ls $bam_dir2 | egrep "^accepted_hits(_1|[2-4])\.")
+
+for f1 in $FILE1; do featureCounts $bam_dir1/$f1 -a $ANNOT -F -g -f -t 'mRNA' -O -s 1 -M -T 12 -p -o $bam_dir1/"diff_expf/mRNA."${f1%".bam"}".txt"; done
+
+for f2 in $FILE2; do featureCounts $bam_dir2/$f2 -a $ANNOT -F -g -f -t 'mRNA' -O -s 0 -M -T 12 -p -o  $bam_dir2/"diff_expf/mRNA."${f2%".bam"}".txt"; done
+
+##### FeatureCounts does not recognize the gene_id of one of the hypothetical proteins ##############
+##### we now must place this gene's id in the count file ############################################
+
+# obtain the id which was not properly detected
+MISSING_HP=$(egrep ".*mRNA.1413190.1421790" hypothetical_aegypti.gff3 | cut -f 9 | cut -d ';' -f 1 | cut -d '=' -f 2
+)
+
+# we will now insert the id into the counts files
+# because it is missing
+
+# the count files are in the diff_expf folder of the stranded and unstranded folder
+de_dir1=$bam_dir1/"diff_expf"
+de_dir2=$bam_dir2/"diff_expf"
+
+# get all the files which correspond to mRNA counts
+FILE1=$(ls $de_dir1 | egrep "mRNA.*txt$")
+FILE2=$(ls $de_dir2 | egrep "mRNA.*txt$")
+
+# for each file, insert the missing id into the line it is missing from and write it to a new file
+# mRNA.i.txt where i corresponds to file accepted_hits[i].txt
+for f1 in $FILE1; do sed -E "s/(^.Supercontig)/"$MISSING_HP"\1/g" $de_dir1/$f1 > $de_dir1/${f1/"accepted_hits"/""}; done
+for f2 in $FILE2; do sed -E "s/(^.Supercontig)/"$MISSING_HP"\1/g" $de_dir2/$f2 > $de_dir2/${f2/"accepted_hits"/""}; done
