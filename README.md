@@ -1,3 +1,3 @@
 Differential Expression
 =======================
-These Python, R and BASH scripts have been used to process BAM files containing aligned Aedes Aegypti reads to a reference genome obtained from VectorBase.
+These Python, R and BASH scripts have been used to process BAM files containing Aedes Aegypti reads aligned to a reference genome obtained from VectorBase.
