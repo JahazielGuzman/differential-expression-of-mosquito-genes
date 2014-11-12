@@ -1,4 +1,6 @@
 library(dplyr)
+
+# this list will hold the counts for each file
 count_files <- list()
 
 # 10 stranded files, 5 unstranded files
@@ -40,3 +42,31 @@ row.names(count_matrix) <- count_matrix$Geneid
 count_matrix$Geneid <- NULL
 
 write.table(count_matrix,"/media/jaxi/differential_expression/tests/exon_counts.txt")
+
+mRNA_files <- c(dir("../unstranded/diff_expf/"),dir("../stranded/diff_expf/"))
+
+i <- grep("mRNA\\.(_|0)?[1-5]\\.txt$",mRNA_files)
+
+mRNA_files <- mRNA_files[i]
+
+count_files <- list()
+
+for (i in 1:length(mRNA_files)) {
+	
+	if ("0" ==  substr(mRNA_files[i],6,6)) {
+		count_files[[i]] <- read.table(
+	  	  paste0("stranded/diff_expf/", mRNA_files[i]), header=T)	
+		colnames(count_files[[i]])[7] <- paste0("accepted_", substr(mRNA_files[i],6,7))
+		count_files[[i]] <- count_files[[i]][,7]
+
+	}
+	else {
+		count_files[[i]] <- read.table(
+	  	  paste0("unstranded/diff_expf/", mRNA_files[i]), header=T)		
+		colnames(count_files[[i]])[7] <- paste0("accepted_", substr(mRNA_files[i],7,7))
+		count_files[[i]] <- count_files[[i]][,7]
+
+	}
+}
+
+count_files <- data.frame(count_files)
