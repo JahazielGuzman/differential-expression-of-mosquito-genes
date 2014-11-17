@@ -1,3 +1,21 @@
+library(dplyr)
+library(DESeq)
+library(RColorBrewer)
+library(gplots)
+library(ggplot2)
+
+
+### these two commands will read in the count table and
+### then read in the metadata for the count table respectively
+aegypti_table <- read.table("tests/exon_counts.txt", row.names = 1, header = TRUE)
+aegypti_filter <- read.table("tests/aegypti_metadata.txt")
+
+# create logical vector to use only metadata for 24 hour and 48 hour
+test_hours <- aegypti_filter$time == 24 | aegypti_filter$time == 48
+test_hours <- as.logical(test_hours * (aegypti_filter$bodyPart == "midgut" & aegypti_filter$treated == "no"))
+test_conditions <- aegypti_filter$time[test_hours]
+
+# only use replicate samples from 24 hour and 48 hour midgut
 
 # experimental conditions
 aegypti_24x48 <- aegypti_table[,test_hours]
@@ -23,11 +41,11 @@ significant_genes <- sample(row.names(aegypti_cds), 30, replace=FALSE)
 aegypti_resSig <- aegypti_cds[significant_genes,]
 hmcol = colorRampPalette(brewer.pal(9,"OrRd"))(200)
 
-pdf(file="most expressed for experiments 1 - 5", onefile=TRUE)
+pdf(file="tests/most expressed for experiments 1 - 5", onefile=TRUE)
 
 ## print random list of genes
-for (i in 1:10)
-heatmap.2(counts(aegypti_resSig, normalized=TRUE)[,1:2], col=hmcol, trace="none", margin=c(10,6), main=paste0"most expressed genes for ")
+#for (i in 1:10)
+#heatmap.2(counts(aegypti_resSig, normalized=TRUE)[,1:2], col=hmcol, trace="none", margin=c(10,6), main="most expressed genes for ")
 
 dev.off()
 
@@ -44,8 +62,8 @@ library(gplots)
 
 ### these two commands will read in the count table and
 ### then read in the metadata for the count table respectively
-aegypti_table <- read.table("exon_counts.txt", row.names = 1, header = TRUE)
-aegypti_filter <- read.table("aegypti_metadata.txt")
+aegypti_table <- read.table("tests/exon_counts.txt", row.names = 1, header = TRUE)
+aegypti_filter <- read.table("tests/aegypti_metadata.txt")
 
 # only use replicate samples from 24 hour and 48 hour midgut
 
@@ -68,7 +86,7 @@ most_expressed <- data.frame(row.names(aegypti_counts)[1:100])
 # contains the i*100 most expressed genes across samples 1-5 and 01-05
 
 for (j in 1:5) {
-    pdf(file = paste0(100*j," most expressed genes for each sample"), onefile = TRUE, width=8, height=(15*j))
+    pdf(file = paste0(100*j,"tests/most expressed genes for each sample"), onefile = TRUE, width=8, height=(15*j))
     for (i in 1:10) {
 
      	  #sample_hm will refer to the current sample under consideration
@@ -129,7 +147,7 @@ for (i in 1:n) {
 row.names(most_exp_table) = m_exp_names
 colnames(most_exp_table) = colnames(most_expressed)
 
-write.table(most_exp_table, "comparison_table.txt")
+write.table(most_exp_table, "tests/comparison_table.txt")
 
 for (i in ncol(most_exp_table)) {
 	m = most_exp_table[,i]
@@ -139,7 +157,7 @@ for (i in ncol(most_exp_table)) {
 
 split = n / 4
 
-pdf(file = "ranking of genes weighted by expression", onefile = TRUE, width=8, height=50)
+pdf(file = "tests/ranking of genes weighted by expression", onefile = TRUE, width=8, height=50)
 heatmap.2(most_exp_table[1:mid,], col=hmcol, trace="none", margin=c(10,6), main="comparing rank of genes weighted by expression pt. 1")
 heatmap.2(most_exp_table[(mid+1):n,], col=hmcol, trace="none", margin=c(10,6), main="comparing rank of genes weighted by expression pt. 2")
 dev.off()
@@ -152,7 +170,7 @@ aegypti_rep_1 <- aegypti_rep_1[rowMeans(aegypti_rep_1) > 0,]
 aegypti_rep_1[,1] <- ifelse(aegypti_rep_1[,1] != 0, log2(aegypti_rep_1[,1]), 0)
 aegypti_rep_1[,2] <- ifelse(aegypti_rep_1[,2] != 0, log2(aegypti_rep_1[,2]), 0)
 
-pdf(file="replicate_1_comparison", width=8, height=50)
+pdf(file="tests/replicate_1_comparison", width=8, height=50)
 heatmap.2(aegypti_rep_1[(aegypti_rep_1[,1] > 0 & aegypti_rep_1[,2] > 0),], col=hmcol, trace="none", margin=c(10,6))
 dev.off()
 
@@ -166,7 +184,7 @@ aegypti_rep_1 <- aegypti_rep_1[rowMeans(aegypti_rep_1) > 0,]
 aegypti_rep_1[,1] <- ifelse(aegypti_rep_1[,1] != 0, log2(aegypti_rep_1[,1]), 0)
 aegypti_rep_1[,2] <- ifelse(aegypti_rep_1[,2] != 0, log2(aegypti_rep_1[,2]), 0)
 
-pdf(file="replicate_4_comparison", width=8, height=100)
+pdf(file="tests/replicate_4_comparison", width=8, height=100)
 heatmap.2(aegypti_rep_1[(aegypti_rep_1[,1] > 0 & aegypti_rep_1[,2] > 0),], col=hmcol, trace="none", margin=c(10,6))
 dev.off()
 
@@ -183,3 +201,136 @@ aegypti_cds <- newCountDataSet(aegypti_exp_24x72, aegypti_hours)
 aegypti_cds <- estimateSizeFactors(aegypti_cds)
 aegypti_cds <- estimateDispersions(aegypti_cds, fitType="local")
 aegypti_res <- nbinomTest(aegypti_cds, "24", "72")
+
+aegypti_resSig <- aegypti_res[order(aegypti_res$pval),]
+aegypti_resSig <- counts(aegypti_cds, normalized=TRUE)[aegypti_resSig$id,]
+for (i in 1:ncol(aegypti_resSig)) {
+	m = aegypti_resSig[,i]
+ 	m = ifelse(m != 0, log2(m), 0)
+	aegypti_resSig[,i] = m
+}
+
+pdf(file="tests/most differentially expressed genes for samples 2/02 and 4/04", width =8, height = 15)
+heatmap.2(aegypti_resSig[1:100,], col=hmcol, trace="none", margin=c(10,6))
+dev.off()
+
+######### show expression for hypothetical proteins #################################
+
+hyp_protein <- read.table("tests/hp_list.txt")
+hyp_protein <- as.character(hyp_protein$V1)
+aegypti_resSig <- data.frame(counts(aegypti_cds, normalized=TRUE))[hyp_protein,]
+aegypti_resSig <- aegypti_resSig[order(rowmeans(aegypti_resSig), decreasing=TRUE),]
+for (i in 1:ncol(aegypti_resSig)) {
+	m = aegypti_resSig[,i]
+ 	m = ifelse(m != 0, log2(m), 0)
+	aegypti_resSig[,i] = m
+}
+
+pdf(file="100 hypothetical proteins", width =8, height = 15)
+heatmap.2(as.matrix(aegypti_resSig), col=hmcol, trace="none", margin=c(10,6))
+dev.off()
+
+for (i in 1:5) {
+	mRNA_01 <- read.table("stranded/diff_expf/mRNA.01.txt", header=TRUE, row.names=1, skip=1, stringsAsFactors=FALSE)
+
+	names(mRNA_01) <- "accepted_hits01"
+	
+	qplot(data=mRNA_01, x = row.names(mRNA_01), 
+	  y = ifelse(accepted_hits01 == 0, 0, log2(accepted_hits01)), 
+            main = "hypothetical protein counts in sample 01") + 
+              ylim(0,20) + xlab("hypothetical proteins") + ylab("log2 of counts")
+
+	ggsave("tests/hypothetical_proteins_sample_01.pdf")
+}
+
+###### show a scatter plot for the counts of hypothetical proteins in sample 01 ##################################
+mRNA_01 <- read.table("stranded/diff_expf/mRNA.01.txt", header=TRUE, row.names=1, skip=1, stringsAsFactors=FALSE)
+
+names(mRNA_01) <- "accepted_hits01"
+
+qplot(data=mRNA_01, x = row.names(mRNA_01), 
+     y = ifelse(accepted_hits01 == 0, 0, log2(accepted_hits01)), 
+          main = "hypothetical protein counts in sample 01") + 
+               ylim(0,20) + xlab("hypothetical proteins") + ylab("log2 of counts")
+
+ggsave("tests/hypothetical_proteins_sample_01.pdf")
+
+#### TRYING TO ORDER THE CHROMOSOME NAMES #####
+i[order(substring(i$Chr,13,nchar(i$Chr))),]
+
+###### show a scatter plot for the counts of hypothetical proteins in sample 03 ##################################
+mRNA_03 <- read.table("stranded/diff_expf/mRNA.03.txt", header=TRUE, row.names=1, skip=1, stringsAsFactors=FALSE)
+
+names(mRNA_03)[6] <- "accepted_hits03"
+
+qplot(data=mRNA_03, x = row.names(mRNA_03), 
+     y = ifelse(accepted_hits03 == 0, 0, log2(accepted_hits03)), 
+          main="hypothetical protein counts in sample 03") + 
+               ylim(0,20) + xlab("hypothetical proteins") + ylab("log2 of counts")
+
+ggsave("tests/hypothetical_proteins_sample_02.pdf")
+
+
+mRNA_02 <- read.table("stranded/diff_expf/mRNA.02.txt", header=TRUE, row.names=1, skip=1, stringsAsFactors=FALSE)
+
+names(mRNA_02)[6] <- "accepted_hits02"
+
+qplot(data=mRNA_02, x = row.names(mRNA_02), 
+     y = ifelse(accepted_hits02 == 0, 0, log2(accepted_hits02)), 
+          main="hypothetical protein counts in sample 02") + 
+               ylim(0,20) + xlab("hypothetical proteins") + ylab("log2 of counts")
+
+ggsave("tests/hypothetical_proteins_sample_02.pdf")
+
+###### plot for 04 #################################################################
+mRNA_04 <- read.table("stranded/diff_expf/mRNA.04.txt", header=TRUE, row.names=1, skip=1, stringsAsFactors=FALSE)
+
+names(mRNA_04)[6] <- "accepted_hits04"
+
+qplot(data=mRNA_04, x = row.names(mRNA_04),
+     y = ifelse(accepted_hits04 == 0, 0, log2(accepted_hits04)),
+          main="hypothetical protein counts in sample 04") +
+               ylim(0,20) + xlab("hypothetical proteins") + ylab("log2 of counts")
+
+ggsave("tests/hypothetical_proteins_sample_04.pdf")
+
+mRNA_05 <- read.table("stranded/diff_expf/mRNA.05.txt", header=TRUE, row.names=1, skip=1, stringsAsFactors=FALSE)
+
+names(mRNA_05)[6] <- "accepted_hits05"
+
+qplot(data=mRNA_05, x = row.names(mRNA_05),
+     y = ifelse(accepted_hits05 == 0, 0, log2(accepted_hits05)),
+          main="hypothetical protein counts in sample 05") +
+               ylim(0,20) + xlab("hypothetical proteins") + ylab("log2 of counts")
+
+ggsave("tests/hypothetical_proteins_sample_05.pdf")
+
+rm(mRNA_01, mRNA_02, mRNA_03, mRNA_04, mRNA_05)
+
+# load the counts for samples 01-05 and 1-4 for hypothetical proteins
+aegyptiHpCounts <- read.table("tests/hp_counts.txt", header=TRUE, row.names=1, stringsAsFactors=FALSE)
+
+aegypti_cds <- newCountDataSet(aegyptiHpCounts, aegypti_filter[c(1:4, 6:10),1:2])
+aegypti_cds <- estimateSizeFactors(aegypti_cds)
+
+# use the normalized counts to draw heatmaps
+aegypti_counts <- counts(aegypti_cds, normalized=TRUE)
+
+# sort in descending order by most expressed genes
+aegypti_hp_map <- aegypti_counts[order(rowMeans(aegypti_counts), decreasing=TRUE),]
+
+# obtain the log2 of counts for each sample
+cols <- ncol(aegypti_hp_map)
+for (i in 1:cols) {
+	aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
+}
+
+# generate heatmap for 100 most expressed hypothetical proteins for sample 1-4
+pdf(file="tests/expression_hypothetical_protein_samples_1thru4", width =8, height = 15)
+heatmap.2(aegypti_hp_map[1:100,1:4], col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, 1-4")
+dev.off()
+
+# do the same for samples 01-05
+pdf(file="tests/expression_hypothetical_protein_samples_01thru04", width =8, height = 15)
+heatmap.2(aegypti_hp_map[1:100,5:9], col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, 01-04")
+dev.off()
