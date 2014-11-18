@@ -44,8 +44,8 @@ hmcol = colorRampPalette(brewer.pal(9,"OrRd"))(200)
 pdf(file="tests/most expressed for experiments 1 - 5", onefile=TRUE)
 
 ## print random list of genes
-#for (i in 1:10)
-#heatmap.2(counts(aegypti_resSig, normalized=TRUE)[,1:2], col=hmcol, trace="none", margin=c(10,6), main="most expressed genes for ")
+for (i in 1:10)
+heatmap.2(counts(aegypti_resSig, normalized=TRUE)[,1:2], col=hmcol, trace="none", margin=c(10,6), main=paste0"most expressed genes for ")
 
 dev.off()
 
@@ -307,7 +307,6 @@ ggsave("tests/hypothetical_proteins_sample_05.pdf")
 
 rm(mRNA_01, mRNA_02, mRNA_03, mRNA_04, mRNA_05)
 
-# load the counts for samples 01-05 and 1-4 for hypothetical proteins
 aegyptiHpCounts <- read.table("tests/hp_counts.txt", header=TRUE, row.names=1, stringsAsFactors=FALSE)
 
 aegypti_cds <- newCountDataSet(aegyptiHpCounts, aegypti_filter[c(1:4, 6:10),1:2])
@@ -315,22 +314,48 @@ aegypti_cds <- estimateSizeFactors(aegypti_cds)
 
 # use the normalized counts to draw heatmaps
 aegypti_counts <- counts(aegypti_cds, normalized=TRUE)
-
 # sort in descending order by most expressed genes
 aegypti_hp_map <- aegypti_counts[order(rowMeans(aegypti_counts), decreasing=TRUE),]
-
 # obtain the log2 of counts for each sample
 cols <- ncol(aegypti_hp_map)
 for (i in 1:cols) {
-	aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
+aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
 }
-
 # generate heatmap for 100 most expressed hypothetical proteins for sample 1-4
 pdf(file="tests/expression_hypothetical_protein_samples_1thru4", width =8, height = 15)
 heatmap.2(aegypti_hp_map[1:100,1:4], col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, 1-4")
 dev.off()
-
 # do the same for samples 01-05
 pdf(file="tests/expression_hypothetical_protein_samples_01thru04", width =8, height = 15)
 heatmap.2(aegypti_hp_map[1:100,5:9], col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, 01-04")
+dev.off()
+
+aegypti_counts <- counts(aegypti_cds)
+# sort in descending order by most expressed genes
+aegypti_hp_map <- aegypti_counts[order(rowMeans(aegypti_counts), decreasing=TRUE),]
+# obtain the log2 of counts for each sample
+cols <- ncol(aegypti_hp_map)
+for (i in 1:cols) {
+aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
+}
+
+toPlot <- aegypti_hp_map[1:50,]
+# generate heatmap for 100 most expressed hypothetical proteins for sample 1-4
+pdf(file="tests/expression_hypothetical_protein_samples_strandedunstranded", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, stranded & unstranded", dendogram="both")
+dev.off()
+
+toPlot <- aegypti_hp_map[50:100,]
+pdf(file="tests/next_50_most_expressed_hypothetical_protein_samples_strandedunstranded", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, stranded & unstranded", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- aegypti_hp_map[101:150,]
+pdf(file="tests/101-150_most_expressed_hypothetical_protein_samples_strandedunstranded", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, stranded & unstranded", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- aegypti_hp_map[151:200,]
+pdf(file="tests/151-200_most_expressed_hypothetical_protein_samples_strandedunstranded", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, stranded & unstranded", Rowv=FALSE, Colv=FALSE, dendrogram="none")
 dev.off()
