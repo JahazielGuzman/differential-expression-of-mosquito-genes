@@ -97,3 +97,13 @@ FILE2=$(ls $de_dir2 | egrep "mRNA.*txt$")
 # mRNA.i.txt where i corresponds to file accepted_hits[i].txt
 for f1 in $FILE1; do sed -E "s/(^.Supercontig)/"$MISSING_HP"\1/g" $de_dir1/$f1 > $de_dir1/${f1/"accepted_hits"/""}; done
 for f2 in $FILE2; do sed -E "s/(^.Supercontig)/"$MISSING_HP"\1/g" $de_dir2/$f2 > $de_dir2/${f2/"accepted_hits"/""}; done
+
+# obtain the bam files for sample 6-10
+FILE3=$(ls $bam_dir1 | egrep "^accepted_hits0([6-9]|10)\.")
+
+# output hypothetical protein counts for each bam file
+for f3 in $FILE3; do featureCounts $bam_dir1/$f3 -a $ANNOT -F -g -f -t 'mRNA' -O -s 1 -M -T 12 -p -o $bam_dir1/"diff_expf/mRNA."${f3%".bam"}".txt"; done
+
+# add the missing id to the count files
+FILE3=ls $de_dir1 | egrep "mRNA.*([6-9]|10)\.txt$")
+for f3 in $FILE3; do sed -E "s/(^.Supercontig)/"$MISSING_HP"\1/g" $de_dir1/$f3 > $de_dir1/${f3/"accepted_hits"/""}; done
