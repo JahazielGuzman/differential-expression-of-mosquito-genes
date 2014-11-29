@@ -24,6 +24,7 @@ aegypti_writer = csv.writer(noribo_ref, delimiter='\t')
 # the list rRNA
 rRNA = rRNA.read()
 rRNA = rRNA.split(" ")
+rRNA.sort()
 
 # there is a newline in the last string element
 # this removes the newline
@@ -41,3 +42,17 @@ for gene in aegypti_reader:
 			b = b or (str(rnas) in str(gene[-1])) # ID/Parent fields are in element 9
 		if not b:
 			aegypti_writer.writerow(gene)
+
+def bin_search (l,p,r,t):
+    if p <= r:
+        mid = int((p+r)/2)
+        if l[mid] == t:
+            return True
+        elif t < l[mid]:
+            r = mid - 1
+            return bin_search(l,p,r,t)
+        else:
+            p = mid + 1
+            return bin_search(l,p,r,t)
+    else:
+        return False
