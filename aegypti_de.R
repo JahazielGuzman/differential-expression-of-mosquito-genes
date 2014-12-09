@@ -1,125 +1,84 @@
+#### aegypti_de.R by Jahaziel Guzman ##############
+#### This R script will read the text files exon_counts.txt, 
+#### aegypti_metadata.txt and hp_counts.txt
+#### both exon_counts.txt and hp_counts.txt contain a
+#### table of integer values, where each row corresponds to an exon
+#### which is represented as a string, and each column corresponds to a set
+#### of reads obtained from a particular sequencing experiment, also known as a sample. 
+#### The count value of the ith row and jth column of the table thus represents the number of reads in
+#### sample j that match the sequence of gene i.
+#### these count values will then be plotted in heatmaps and scatterplots, showing the level of expression
+
 library(dplyr)
 library(DESeq)
 library(RColorBrewer)
 library(gplots)
 library(ggplot2)
 
-
-### these two commands will read in the count table and
-### then read in the metadata for the count table respectively
+### Read in the table of exon counts into aegypti_table, then read
+### the metadata for all the samples into aegypti_filter
 aegypti_table <- read.table("tests/exon_counts.txt", row.names = 1, header = TRUE)
 aegypti_filter <- read.table("tests/aegypti_metadata.txt")
 
-# create logical vector to use only metadata for 24 hour and 48 hour
-test_hours <- aegypti_filter$time == 24 | aegypti_filter$time == 48
-test_hours <- as.logical(test_hours * (aegypti_filter$bodyPart == "midgut" & aegypti_filter$treated == "no"))
-test_conditions <- aegypti_filter$time[test_hours]
+# use counts for all exons, from sample 01-05 and 1-5
+aegypti_samples <- aegypti_table[,1:10]
 
-# only use replicate samples from 24 hour and 48 hour midgut
-
-# experimental conditions
-aegypti_24x48 <- aegypti_table[,test_hours]
-
-# now start differential expression
-aegypti_cds <- newCountDataSet(aegypti_24x48, test_conditions)
-aegypti_cds <- estimateSizeFactors(aegypti_cds)
-sizeFactors(aegypti_cds)
-aegypti_cds <- estimateDispersions(aegypti_cds, fitType="local")
-aegypti_res <- nbinomTest(aegypti_cds, "24", "48")
-
-# y axis is dispersion for each gene, genes are on the x axis, sorted
-# by their average expression
-
-plotDispEsts(aegypti_cds, main = "avg gene expression in 24 hour and 48 hour midgut samples")
-plotMA(aegypti_res, main = "log2 fold change from 24 hours to 48 hours")
-hist(aegypti_res$pval, breaks = 100, col="skyblue", border="slateblue", main="p-values for conditions 24 vs 48")
-head(arrange(aegypti_res, foldChange, pval))
-
-###### randomly select genes to display in a heat-map#############
-
-significant_genes <- sample(row.names(aegypti_cds), 30, replace=FALSE)
-aegypti_resSig <- aegypti_cds[significant_genes,]
-hmcol = colorRampPalette(brewer.pal(9,"OrRd"))(200)
-
-pdf(file="tests/most expressed for experiments 1 - 5", onefile=TRUE)
-
-## print random list of genes
-for (i in 1:10)
-heatmap.2(counts(aegypti_resSig, normalized=TRUE)[,1:2], col=hmcol, trace="none", margin=c(10,6), main=paste0"most expressed genes for ")
-
-dev.off()
-
-
-######################################################################
-######################################################################
-######## map the most expressed genes for samples 01-05 and 1-5 ##########
-
-library(dplyr)
-library(DESeq)
-library(RColorBrewer)
-library(gplots)
-
-
-### these two commands will read in the count table and
-### then read in the metadata for the count table respectively
-aegypti_table <- read.table("tests/exon_counts.txt", row.names = 1, header = TRUE)
-aegypti_filter <- read.table("tests/aegypti_metadata.txt")
-
-# only use replicate samples from 24 hour and 48 hour midgut
-
-# experimental conditions
-aegypti_24x48 <- aegypti_table[,1:10]
-
-# now start differential expression
-aegypti_cds <- newCountDataSet(aegypti_24x48, aegypti_filter[1:10,1:2])
+# now start differential expression, use metadata corresponding to the
+# samples 01-05 and 1-5, in particular the time of mRNA extraction and the
+# body part from which the mRNA was extracted
+aegypti_cds <- newCountDataSet(aegypti_samples, aegypti_filter[1:10,1:2])
 aegypti_cds <- estimateSizeFactors(aegypti_cds)
 
-# get the counts from the aegypti table and assign it to variable
-# aegypti_counts, this is done for readability
+# store the count data in aegypti_counts
 aegypti_counts <- counts(aegypti_cds)
 
-# heatmap will have varying values of red and orange
+# hmcol will hold the range of colors to be displayed in the heatmap
 hmcol = colorRampPalette(brewer.pal(9,"OrRd"))(100)
+
+# most_expressed will contain the 100 most expressed genes, this statement
+# initializes most_expressed to have 100 rows, this is done so the cbind() function
+# will work
 most_expressed <- data.frame(row.names(aegypti_counts)[1:100])
 
-# generate 5 pdf files, each pdf file i (where i > 0) 
-# contains the i*100 most expressed genes across samples 1-5 and 01-05
+# generate 5 pdf files, each pdf file i (where 0 < i <= 5)
+# will contain the i*100 most expressed genes across samples 1-5 and 01-05
 
-for (j in 1:5) {
-    pdf(file = paste0(100*j,"tests/most expressed genes for each sample"), onefile = TRUE, width=8, height=(15*j))
-    for (i in 1:10) {
+for (i in 1:5) {
+    pdf(file = paste0(100*i,"tests/most expressed genes for each sample"), onefile = TRUE, width=8, height=(15*j))
+    for (j in 1:10) {
 
      	  #sample_hm will refer to the current sample under consideration
      	  sample_hm <- cbind(
-       	            ifelse(aegypti_counts[,i] != 0,log2(aegypti_counts[,i]),0), replicate(
+       	            ifelse(aegypti_counts[,j] != 0,log2(aegypti_counts[,j]),0), replicate(
                       nrow(aegypti_counts), 0))
 	  
-     	  colname = colnames(aegypti_counts)[i]
+     	  colname = colnames(aegypti_counts)[j]
    
 	  # order the genes in sample_hm by gene expression from highest to lowest
      	  sample_hm <- sample_hm[order(sample_hm[,1], decreasing=TRUE),]
 
 	  # store the names of the 100 most expressed genes for the current
 	  # sample as a column in the most_expressed data.frame
- 	  most_expressed[,i] <- row.names(sample_hm)[1:100]
+ 	  most_expressed[,j] <- row.names(sample_hm)[1:100]
      	  
 	  # add a dummy column because heatmap.2 needs at least 2 columns to map
      	  colnames(sample_hm) <- c(colname, "dummy")
 	  
 	  # generate the heatmap
-       	  heatmap.2(sample_hm[1:(100*j),], col=hmcol, trace="none", margin=c(10,6), main="most expressed genes each sample", srtCol=0)  
+       	  heatmap.2(sample_hm[1:(100*i),], col=hmcol, trace="none", margin=c(10,6), main="most expressed genes each sample", srtCol=0)  
      
      }
-     dev.off() 
+     dev.off()
 }
 
-# set the colum names for most_expressed
-colnames(most_expressed)[i] = colnames(aegypti_counts)
+# set the column names for most_expressed
+colnames(most_expressed) = colnames(aegypti_counts)
 
-# create an empty vector 
+# create an empty vector
 m_exp_names <- c()
 
 n = ncol(most_expressed)
+
 # assign all the names belonging to each sample
 for (i in 1:n) {
 	m_exp_names <- c(m_exp_names,most_expressed[,i])
@@ -277,7 +236,7 @@ names(mRNA_02)[6] <- "accepted_hits02"
 
 qplot(data=mRNA_02, x = row.names(mRNA_02), 
      y = ifelse(accepted_hits02 == 0, 0, log2(accepted_hits02)), 
-          main="hypothetical protein counts in sample 02") + 
+          main="hypothetical protein counts in sample 02") +
                ylim(0,20) + xlab("hypothetical proteins") + ylab("log2 of counts")
 
 ggsave("tests/hypothetical_proteins_sample_02.pdf")
@@ -358,4 +317,138 @@ dev.off()
 toPlot <- aegypti_hp_map[151:200,]
 pdf(file="tests/151-200_most_expressed_hypothetical_protein_samples_strandedunstranded", width =8, height = 15)
 heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, stranded & unstranded", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+for (i in mRNA_files) {
+	mRNA_09 <- read.table(paste0("stranded/diff_expf/",i), header=TRUE, row.names=1, skip=1, stringsAsFactors=FALSE)
+	qplot(data=mRNA_09, x = row.names(mRNA_09),
+     	y = ifelse(mRNA_09[,6] == 0, 0, log2(mRNA_09[,6])),
+          main=paste0("hypothetical protein counts in",i)) +
+               ylim(0,20) + xlab("hypothetical proteins") + ylab("log2 of counts")
+
+	ggsave(paste0("tests/plots_for_", i, ".pdf"))
+}
+
+###############################################################################
+### now show the expression for hypothetical proteins in the cuticle samples###
+###############################################################################
+
+aegyptiHpCounts <- read.table("tests/hp_counts.txt", header=TRUE, row.names=1, stringsAsFactors=FALSE)
+
+aegypti_cds <- newCountDataSet(aegyptiHpCounts[,10:14], aegypti_filter[11:15,1:2])
+aegypti_cds <- estimateSizeFactors(aegypti_cds)
+
+aegypti_counts <- counts(aegypti_cds)
+# sort in descending order by most expressed genes
+aegypti_hp_map <- aegypti_counts[order(rowMeans(aegypti_counts), decreasing=TRUE),]
+# obtain the log2 of counts for each sample
+cols <- ncol(aegypti_hp_map)
+for (i in 1:cols) {
+aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
+}
+
+toPlot <- rbind(aegypti_hp_map[1:50,],c(20,20,20,20,20))
+# generate heatmap for 100 most expressed hypothetical proteins for sample 06-010
+pdf(file="tests/expression_hypothetical_protein_samples_cuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[50:100,],c(20,20,20,20,20))
+pdf(file="tests/next_50_most_expressed_hypothetical_protein_samples_cuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[101:150,],c(20,20,20,20,20))
+pdf(file="tests/101-150_most_expressed_hypothetical_protein_samples_cuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[151:200,],c(20,20,20,20,20))
+pdf(file="tests/151-200_most_expressed_hypothetical_protein_samples_cuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hypothetical proteins, cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+###############################################################################
+###############################################################################
+#### Now compare midgut and cuticle samples at the same stages of larval development
+###############################################################################
+
+aegyptiCompare <- read.table("tests/exon_counts.txt", header=TRUE, row.names=1, stringsAsFactors=FALSE)
+
+aegypti_cds <- newCountDataSet(aegyptiCompare[, 6:15], aegypti_filter[6:15, 1:2])
+aegypti_cds <- estimateSizeFactors(aegypti_cds)
+
+aegypti_counts <- counts(aegypti_cds)
+
+# order rows by most significantly expressed
+aegypti_hp_map <- aegypti_counts[order(rowMeans(aegypti_counts), decreasing=TRUE),]
+
+# obtain the log2 of counts for each sample
+cols <- ncol(aegypti_hp_map)
+h
+for (i in 1:cols) {
+aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
+}
+
+toPlot <- rbind(aegypti_hp_map[1:50,],c(20,20,20,20,20))
+# generate heatmap for 100 most expressed exons for sample 06-010
+pdf(file="tests/most_expressed_exon_midgutvscuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed exons, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[50:100,],c(20,20,20,20,20))
+pdf(file="tests/next_50_most_expressed_exon_midgutvscuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed exons, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[101:150,],c(20,20,20,20,20))
+pdf(file="tests/101-150_most_expressed_exon_midgutvscuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed exons, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[151:200,],c(20,20,20,20,20))
+pdf(file="tests/151-200_most_expressed_exon_midgutvscuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed exons, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+###############################################################################
+###############################################################################
+##### hypothetical protein sequences, midgut vs cuticle #######################
+
+aegyptiCompare <- read.table("tests/hp_counts.txt", header=TRUE, row.names=1, stringsAsFactors=FALSE)
+
+aegypti_cds <- newCountDataSet(aegyptiCompare[, 5:14], aegypti_filter[5:14, 1:2])
+aegypti_cds <- estimateSizeFactors(aegypti_cds)
+
+aegypti_counts <- counts(aegypti_cds)
+
+# order rows by most significantly expressed
+aegypti_hp_map <- aegypti_counts[order(rowMeans(aegypti_counts), decreasing=TRUE),]
+
+# obtain the log2 of counts for each sample
+cols <- ncol(aegypti_hp_map)
+h
+for (i in 1:cols) {
+aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
+}
+
+toPlot <- rbind(aegypti_hp_map[1:50,],c(20,20,20,20,20))
+# generate heatmaps for 100 most expressed hypothetical proteins for sample 06-010
+pdf(file="tests/most_expressed_hyp.pro_midgutvscuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hp, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[50:100,],c(20,20,20,20,20))
+pdf(file="tests/next_50_most_expressed_hyp.pro_midgutvscuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hp, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[101:150,],c(20,20,20,20,20))
+pdf(file="tests/101-150_most_expressed_hyp.pro_midgutvscuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hp, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[151:200,],c(20,20,20,20,20))
+pdf(file="tests/151-200_most_expressed_hyp.pro_midgutvscuticle", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hp, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
 dev.off()
