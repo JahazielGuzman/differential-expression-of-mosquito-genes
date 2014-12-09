@@ -105,5 +105,13 @@ FILE3=$(ls $bam_dir1 | egrep "^accepted_hits0([6-9]|10)\.")
 for f3 in $FILE3; do featureCounts $bam_dir1/$f3 -a $ANNOT -F -g -f -t 'mRNA' -O -s 1 -M -T 12 -p -o $bam_dir1/"diff_expf/mRNA."${f3%".bam"}".txt"; done
 
 # add the missing id to the count files
-FILE3=ls $de_dir1 | egrep "mRNA.*([6-9]|10)\.txt$")
-for f3 in $FILE3; do sed -E "s/(^.Supercontig)/"$MISSING_HP"\1/g" $de_dir1/$f3 > $de_dir1/${f3/"accepted_hits"/""}; done
+FILE3=$(ls $de_dir1 | egrep "mRNA.*([6-9]|10)\.txt$")
+for f3 in $FILE3; do sed -E "s/(^.Supercontig)/"$MISSING_HP"\1/g" $de_dir1/$f3 > $de_dir1""/${f3/"accepted_hits"/""}; done
+
+FILE4=$(ls $bam_dir1 | egrep "^accepted_hits(1|2)[0-9]\.")
+
+for f4 in $FILE4; do featureCounts $bam_dir1/$f4 -a $ANNOT -F -g -f -t 'mRNA' -O -s 1 -M -T 12 -p -o $bam_dir1/"diff_expf/mRNA."${f4%".bam"}".txt"; done
+
+ANNOT="/media/jaxi/differential_expression/noriboaegypti.gff3"
+
+for f4 in $FILE4; do featureCounts $bam_dir1/$f4 -a $ANNOT -F -g -f -t 'exon' -O -s 1 -M -T 12 -p -o $bam_dir1/"diff_expf/"${f4%".bam"}".txt"; done
