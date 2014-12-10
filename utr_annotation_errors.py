@@ -1,14 +1,16 @@
 import csv
 import gzip
+import sys
 
-if len(sys.argv) < 1:
-exit_string = "please enter the file name of the accepted_hits file, the file should be a txt file\n please leave out the file extension"
-print exit_string
-sys.exit(1)
+if len(sys.argv) < 2:
+	exit_string = "please enter the file name of the accepted_hits txt file without extension"
+	print exit_string
+	sys.exit(1)
 
-read_file = sys.argv[0] + ".txt"
+read_file = "bam_files/" + sys.argv[1] + ".txt.gz"
 read_file = gzip.open(read_file,"rb")
 UTRs = open("3_prime_utr_list.txt","rb").read()
+UTR_results = open("tests/utr_results_for_" + str(sys.argv[0]) + ".txt", "w")
 UTRs = UTRs.split("\n")
 
 rnaseq_reads = csv.reader(read_file, delimiter="\t")
@@ -28,9 +30,9 @@ for utr in UTRs:
 	utr_dict[utr[0]] = [0,0]
 	for read in rnaseq_reads:
 		if read[2] == utr[1]:
-			if read[3] < utr[3]:
-				read_end = read[3] + len(read[9]) - 1
-				if utr[2] <= read[3] and read_end <= utr[3] - v:
+			if int(read[3]) < int(utr[3]):
+				read_end = int(read[3]) + len(read[9]) - 1
+				if int(utr[2]) <= int(read[3]) and read_end <= (int(utr[3]) - v):
 					utr_dict[utr[0]][0] += 1
 				elif utr[3] <= read_end:
 					utr_dict[utr[0]][1] += 1 
@@ -40,7 +42,11 @@ for utr in UTRs:
 			continue
 		else:
 			break
-	rnaseq_reads.seek(0)
+	print "finished " + str(utr[0])
+	read_file.seek(0)
+	rnaseq_reads = csv.reader(read_file, delimiter="\t")
 
 for utr in utr_dict:
-	utr_test_string += "\t".join(map(str,[utr,utr_dict[utr][0],utr_dict[utr][1]]))
+	utr_test_string += "\t".join(map(str,[utr,utr_dict[utr][0],utr_dict[utr][1]])) + "\n"
+
+UTR_results.write(utr_test_string)
