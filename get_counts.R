@@ -80,3 +80,76 @@ count_matrix$Geneid <- NULL
 names(count_matrix) <- names(count_files)
 
 write.table(count_matrix,"tests/hp_counts.txt")
+
+mRNA_files <- dir("stranded/diff_expf/")
+
+i <- grep("mRNA\\.0([6-9]|10)\\.txt$",mRNA_files)
+
+mRNA_files <- mRNA_files[i]
+
+count_files <- list()
+
+for (i in 1:length(mRNA_files)) {
+	
+	if ("1" ==  substr(mRNA_files[i],7,7)) {
+		count_files[[i]] <- read.table(
+	  	  paste0("stranded/diff_expf/", mRNA_files[i]), header=T)			
+		count_files[[i]] <- count_files[[i]][,7]
+		names(count_files)[i] <- paste0("accepted_", substr(mRNA_files[i],7,8))
+
+	}
+	else {
+		count_files[[i]] <- read.table(
+	  	  paste0("stranded/diff_expf/", mRNA_files[i]), header=T)		
+		count_files[[i]] <- count_files[[i]][,7]
+		names(count_files)[i] <- paste0("accepted_", substr(mRNA_files[i],6,7))
+	}
+}
+
+count_matrix <- data.frame(Geneid=row.names(read.table(paste0("stranded/diff_expf/", mRNA_files[1]), header=T, row.names=1, skip=1)),stringsAsFactors=FALSE)
+
+for (i in 1:length(mRNA_files)) {
+		count_matrix[,i + 1] <- count_files[[i]]
+}
+
+row.names(count_matrix) <- count_matrix$Geneid
+count_matrix$Geneid <- NULL
+names(count_matrix) <- names(count_files)
+
+count_matrix[,6] <- count_matrix[,1]
+count_matrix[,1] <- NULL
+names(count_matrix)[5] <- "accepted_10"
+
+count_matrix <- data.frame(cbind(read.table("tests/hp_counts.txt", header=T, row.names=1,stringsAsFactors=FALSE), count_matrix))
+write.table(count_matrix,"tests/hp_counts.txt")
+
+#### now add read summarization for hypothetical proteins for samples 11 - 18
+
+mRNA_files <- dir("stranded/diff_expf/")
+
+i <- grep("mRNA\\.(1|2)[1-9]\\.txt$",mRNA_files)
+
+mRNA_files <- mRNA_files[i]
+
+count_files <- list()
+
+for (i in 1:length(mRNA_files)) {
+	
+	count_files[[i]] <- read.table(
+  	paste0("stranded/diff_expf/", mRNA_files[i]), header=T)		
+	count_files[[i]] <- count_files[[i]][,7]
+	names(count_files)[i] <- paste0("accepted_", substr(mRNA_files[i],6,7))
+}
+
+count_matrix <- data.frame(Geneid=row.names(read.table(paste0("stranded/diff_expf/", mRNA_files[1]), header=T, row.names=1, skip=1)),stringsAsFactors=FALSE)
+
+for (i in 1:length(mRNA_files)) {
+		count_matrix[,i + 1] <- count_files[[i]]
+}
+
+row.names(count_matrix) <- count_matrix$Geneid
+count_matrix$Geneid <- NULL
+names(count_matrix) <- names(count_files)
+
+count_matrix <- data.frame(cbind(read.table("tests/hp_counts.txt", header=T, row.names=1,stringsAsFactors=FALSE), count_matrix))
+write.table(count_matrix,"tests/hp_counts.txt")
