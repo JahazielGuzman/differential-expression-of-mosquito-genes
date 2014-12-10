@@ -115,3 +115,7 @@ for f4 in $FILE4; do featureCounts $bam_dir1/$f4 -a $ANNOT -F -g -f -t 'mRNA' -O
 ANNOT="/media/jaxi/differential_expression/noriboaegypti.gff3"
 
 for f4 in $FILE4; do featureCounts $bam_dir1/$f4 -a $ANNOT -F -g -f -t 'exon' -O -s 1 -M -T 12 -p -o $bam_dir1/"diff_expf/"${f4%".bam"}".txt"; done
+
+FILE4=$(ls $de_dir1 | egrep "mRNA.*(1|2)[1-9]\.txt$")
+
+for f4 in $FILE4; do sed -E "s/(^.Supercontig)/"$MISSING_HP"\1/g" $de_dir1/$f4 > $de_dir1""/${f4/"accepted_hits"/""}; done
