@@ -385,7 +385,7 @@ aegypti_hp_map <- aegypti_counts[order(rowMeans(aegypti_counts), decreasing=TRUE
 
 # obtain the log2 of counts for each sample
 cols <- ncol(aegypti_hp_map)
-h
+
 for (i in 1:cols) {
 aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
 }
@@ -427,7 +427,7 @@ aegypti_hp_map <- aegypti_counts[order(rowMeans(aegypti_counts), decreasing=TRUE
 
 # obtain the log2 of counts for each sample
 cols <- ncol(aegypti_hp_map)
-h
+
 for (i in 1:cols) {
 aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
 }
@@ -451,4 +451,71 @@ dev.off()
 toPlot <- rbind(aegypti_hp_map[151:200,],c(20,20,20,20,20))
 pdf(file="tests/151-200_most_expressed_hyp.pro_midgutvscuticle", width =8, height = 15)
 heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hp, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+###### hypothetical protein sequences in the methoxyfenozide treated samples #####
+
+aegyptiCompare <- read.table("tests/hp_counts.txt", header=TRUE, row.names=1, stringsAsFactors=FALSE)
+
+aegypti_cds <- newCountDataSet(aegyptiCompare[, 15:18], aegypti_filter[16:19, 1:2])
+aegypti_cds <- estimateSizeFactors(aegypti_cds)
+
+aegypti_counts <- counts(aegypti_cds)
+
+# order rows by most significantly expressed
+aegypti_hp_map <- aegypti_counts[order(rowMeans(aegypti_counts), decreasing=TRUE),]
+
+# obtain the log2 of counts for each sample
+cols <- ncol(aegypti_hp_map)
+
+for (i in 1:cols) {
+aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
+}
+
+toPlot <- rbind(aegypti_hp_map[1:50,],c(20,20,20,20))
+
+# generate heatmaps for 100 most expressed hypothetical proteins for sample 06-010
+pdf(file="tests/most_expressed_hyp.pro_midgutvscuticle_methoxy", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hp, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[50:100,],c(20,20,20,20))
+pdf(file="tests/next_50_most_expressed_hyp.pro_midgutvscuticle_methoxy", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hp, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[101:150,],c(20,20,20,20))
+pdf(file="tests/101-150_most_expressed_hyp.pro_midgutvscuticle_methoxy", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hp, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+toPlot <- rbind(aegypti_hp_map[151:200,],c(20,20,20,20))
+pdf(file="tests/151-200_most_expressed_hyp.pro_midgutvscuticle_methoxy", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most expressed hp, midgut vs cuticle", Rowv=FALSE, Colv=FALSE, dendrogram="none")
+dev.off()
+
+### test for differential expression between midgut samples of untreated and methoxyfenozide treated samples
+
+
+aegypti_cds <- newCountDataSet(aegyptiCompare[,c(3,7,15,16)], aegypti_filter[c(3,8,16,17), 3])
+aegypti_cds <- estimateSizeFactors(aegypti_cds)
+aegypti_cds <- estimateDispersions(aegypti_cds, fitType="local")
+
+aegypti_res <- nbinomTest(aegypti_cds, "no", "methoxyfenozide")
+lowest_pval_exons <- aegypti_res[order(aegypti_res$pval),]
+
+aegypti_hp_map <- counts(aegypti_cds)[order(aegypti_res$pval),]
+
+# obtain the log2 of counts for each sample
+cols <- ncol(aegypti_hp_map)
+
+for (i in 1:cols) {
+aegypti_hp_map[,i] <- ifelse(aegypti_hp_map[,i] == 0, 0, log2(aegypti_hp_map[,i]))
+}
+
+toPlot <- rbind(aegypti_hp_map[1:50,],c(20,20,20,20))
+
+# generate heatmaps for 100 most expressed hypothetical proteins for sample 06-010
+pdf(file="tests/most_significantly_diff_exp_midgut_48_methoxyfenozidevsuntreated", width =8, height = 15)
+heatmap.2(toPlot, col=hmcol, trace="none", margin=c(10,6), main="most sig diff exp hp, treated vs untreated", Rowv=FALSE, Colv=FALSE, dendrogram="none")
 dev.off()
