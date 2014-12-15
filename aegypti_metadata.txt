@@ -14,3 +14,11 @@ accepted07	24	cuticle	no
 accepted08	48	cuticle	no
 accepted09	72	cuticle	no
 accepted010	96	cuticle	no
+accepted11	48	midgut	methoxyfenozide
+accepted12	48	midgut	methoxyfenozide
+accepted13	48	cuticle	methoxyfenozide
+accepted14	48	cuticle	methoxyfenozide
+accepted15	72	midgut	methoxyfenozide
+accepted16	72	midgut	methoxyfenozide
+accepted17	72	cuticle	methoxyfenozide
+accepted18	72	cuticle	methoxyfenozide
