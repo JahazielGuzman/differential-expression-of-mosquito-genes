@@ -108,14 +108,21 @@ for f3 in $FILE3; do featureCounts $bam_dir1/$f3 -a $ANNOT -F -g -f -t 'mRNA' -O
 FILE3=$(ls $de_dir1 | egrep "mRNA.*([6-9]|10)\.txt$")
 for f3 in $FILE3; do sed -E "s/(^.Supercontig)/"$MISSING_HP"\1/g" $de_dir1/$f3 > $de_dir1""/${f3/"accepted_hits"/""}; done
 
+#### now do read summarization for methoxyfenozide treated samples #####
 FILE4=$(ls $bam_dir1 | egrep "^accepted_hits(1|2)[0-9]\.")
+
+### first for hypothetical proteins ####
 
 for f4 in $FILE4; do featureCounts $bam_dir1/$f4 -a $ANNOT -F -g -f -t 'mRNA' -O -s 1 -M -T 12 -p -o $bam_dir1/"diff_expf/mRNA."${f4%".bam"}".txt"; done
 
 ANNOT="/media/jaxi/differential_expression/noriboaegypti.gff3"
 
+#### now for exons #####
+
 for f4 in $FILE4; do featureCounts $bam_dir1/$f4 -a $ANNOT -F -g -f -t 'exon' -O -s 1 -M -T 12 -p -o $bam_dir1/"diff_expf/"${f4%".bam"}".txt"; done
 
 FILE4=$(ls $de_dir1 | egrep "mRNA.*(1|2)[1-9]\.txt$")
+
+##### insert a missing hypothetical protein identifier
 
 for f4 in $FILE4; do sed -E "s/(^.Supercontig)/"$MISSING_HP"\1/g" $de_dir1/$f4 > $de_dir1""/${f4/"accepted_hits"/""}; done
