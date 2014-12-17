@@ -14,7 +14,7 @@ library(DESeq)
 library(RColorBrewer)
 library(gplots)
 library(ggplot2)
-
+ 
 ### Read in the table of exon counts into aegypti_table, then read
 ### the metadata for all the samples into aegypti_filter
 aegypti_table <- read.table("tests/exon_counts.txt", row.names = 1, header = TRUE)
