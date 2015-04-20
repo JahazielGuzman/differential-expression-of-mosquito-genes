@@ -4,6 +4,10 @@ These Python, R and BASH scripts have been used to process BAM files containing 
 
 These BAM files each contain a set of "reads" which are digitized RNA sequences output from an RNA sequencer. These srquences are converted to cDNA sequences which are strings in the alphabet {A,T,G,C}*. each sequence corresponds to a fragment of an mRNA molecule extracted from an organism under a particular experimental condition. The sequences in the BAM files have been mapped to an "reference genome" and thus contain the corresponding numeric positions (also called "chromosomal coordinates") to which they map in the reference.
 
+Further details can be found in the word document final_report.docx. 
+
+The scripts that were run are now presented. They are presented in the order in which they should be run from the command line.
+
 copy_bam.sh: moves the BAM files stored on the local computer to an external hard drive labeled JAXI. The files are then processed with a program called featureCounts. featureCounts takes every read in each BAM file supplied to it and checks whether that read overlaps with any annotated sequences in an "annotated genome" which contains several metadata for each known sequence in the organisms genome including the starting and ending chromosomal coordinates as well as its length.
 The main output of this script is a set of read summarization files each containing a table, where rows correspond to sequence identifiers,
 and the values of interest are in a column corresponding to the name of the supplied bam file. The values in this column are integer count values.
@@ -40,4 +44,4 @@ Inputs: accesses several read files in the bam_files folder. 					Outputs: Outpu
 
 utr_annotation_errors.py: 											
 -------------------------
-Inputs: Opens the file 3_prime_utr_list.txt and the read file the users supplies as an argument to the program. 						Outputs: Determines the number of reads which are prefixes for each 3’-UTR and number of reads containing prefixes that are also suffixes of the 3’-UTR.
+Inputs: Opens the file 3_prime_utr_list.txt and the read file the user supplies as an argument to the program. 						Outputs: Determines the number of reads which are prefixes for each 3’-UTR and number of reads containing prefixes that are also suffixes of the 3’-UTR.
