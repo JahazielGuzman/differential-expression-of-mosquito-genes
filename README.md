@@ -1,4 +1,4 @@
-Differential Expression
+Differential expression of mosquito genes
 =======================
 These Python, R and BASH scripts have been used to process BAM files containing Aedes Aegypti reads aligned to a reference genome obtained from VectorBase. Many of the scripts in this repository cannot be properly used on another computer, since many of BAM files are too large to upload.
 
